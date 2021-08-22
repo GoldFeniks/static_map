@@ -265,11 +265,16 @@ namespace feniks {
 
         using type = Enum;
 
-        using values = std::conditional_t<
-                sizeof...(Values) == 0,
-                implementation::enum_enumeration_t<Enum>,
-                std::tuple<std::integral_constant<Enum, Values>...>
-        >;
+        using values = std::tuple<std::integral_constant<Enum, Values>...>;
+
+    };
+
+    template<typename Enum>
+    struct enum_specification<Enum> {
+
+        using type = Enum;
+
+        using values = implementation::enum_enumeration_t<Enum>;
 
     };
 
