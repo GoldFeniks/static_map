@@ -231,12 +231,7 @@ namespace feniks {
 
             template<Enum Key>
             constexpr void erase() {
-                auto& optional = enum_value<Key>::value;
-
-                if (!optional.has_value())
-                    throw std::out_of_range("There's no value for the specified key");
-
-                optional.reset();
+                enum_value<Key>::value.reset();
             }
 
             template<typename... Args>
