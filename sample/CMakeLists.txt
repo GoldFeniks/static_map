@@ -5,4 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 include_directories(../include)
 
-add_executable(sample sample.cpp)
+file(GLOB SAMPLES "*.cpp")
+foreach(sample ${SAMPLES})
+    get_filename_component(name ${sample} NAME_WLE)
+    add_executable(${name} ${sample})
+endforeach(sample)
