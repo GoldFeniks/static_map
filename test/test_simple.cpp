@@ -212,3 +212,16 @@ TEST(STATIC_MAP_TEST, STATIC_MAP_SIMPLE_NOT_DEFAULT_CONSTRUCTIBLE) {
     EXPECT_EQ(map.get<simple_enum_count::third>(), (point(3, 2, 1)));
     EXPECT_EQ(map.get<simple_enum_count::fourth>(), (point(3, 2, 1)));
 }
+
+TEST(STATIC_MAP_TEST, STATIC_MAP_SIMPLE_INITIALIZATION) {
+    feniks::static_map<simple_enum_count, std::string> map{ { simple_enum_count::second, "123" }, { simple_enum_count::third, "321" } };
+
+    EXPECT_TRUE(map.contains<simple_enum_count::second>());
+    EXPECT_TRUE(map.contains<simple_enum_count::third>());
+
+    EXPECT_FALSE(map.contains<simple_enum_count::first>());
+    EXPECT_FALSE(map.contains<simple_enum_count::fourth>());
+
+    EXPECT_EQ(map.get<simple_enum_count::second>(), "123");
+    EXPECT_EQ(map.get<simple_enum_count::third>(),  "321");
+}

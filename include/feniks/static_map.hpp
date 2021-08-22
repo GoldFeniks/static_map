@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <optional>
 #include <stdexcept>
+#include <functional>
 #include <type_traits>
 
 namespace feniks {
@@ -134,7 +135,36 @@ namespace feniks {
         struct static_map;
 
         template<typename Enum, typename Value, Enum... Keys, typename... KeyOverrides, typename... TypeOverrides>
-        struct static_map<std::enable_if_t<sizeof...(KeyOverrides) == sizeof...(TypeOverrides), Enum>, Value, std::tuple<std::integral_constant<Enum, Keys>...>, std::tuple<KeyOverrides...>, std::tuple<TypeOverrides...>> : private enum_value<Enum, Keys, enum_value_type_t<Enum, Keys, Value, std::tuple<KeyOverrides, TypeOverrides>...>>... {
+        class static_map<std::enable_if_t<sizeof...(KeyOverrides) == sizeof...(TypeOverrides), Enum>, Value, std::tuple<std::integral_constant<Enum, Keys>...>, std::tuple<KeyOverrides...>, std::tuple<TypeOverrides...>> : private enum_value<Enum, Keys, enum_value_type_t<Enum, Keys, Value, std::tuple<KeyOverrides, TypeOverrides>...>>... {
+
+        private:
+
+            template<Enum Key, typename T>
+            struct assigner {
+
+                T value;
+
+                constexpr explicit assigner(T&& value) : value(std::forward<T>(value)) {}
+
+                constexpr void operator()(static_map& map) {
+                    if constexpr (std::is_convertible_v<T, value_type<Key>>)
+                        map.template insert_or_assign<Key>(value_type<Key>(std::move(value)));
+                }
+
+            };
+
+            struct key_value {
+
+                std::function<void(static_map&)> assign;
+
+                template<typename T>
+                constexpr key_value(Enum key, T&& value) {
+                    ((Keys == key ? &(assign = assigner<Keys, T>(std::forward<T>(value))) : nullptr), ...);
+                }
+
+            };
+
+        public:
 
             using size_type = size_t;
 
@@ -145,6 +175,11 @@ namespace feniks {
             using enum_value = implementation::enum_value<Enum, Key, value_type<Key>>;
 
             constexpr static_map() = default;
+
+            constexpr explicit static_map(std::initializer_list<key_value> init) {
+                for (auto& value : init)
+                    value.assign(*this);
+            }
 
             template<Enum Key>
             [[nodiscard]] constexpr bool contains() const {
